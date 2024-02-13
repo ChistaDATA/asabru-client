@@ -1,0 +1,12 @@
+.DS_Store
+.idea/
+cmake-build-debug/
+build/
+*.o
+*.pem
+__pycache__/
+*.csv
+*.xz
+*.backup
+lib
+lib/*
