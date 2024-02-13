@@ -27,13 +27,13 @@ enable_testing()
 include(GoogleTest)
 gtest_discover_tests(${TEST_NAME})
 
-# Create the gcov target. Run coverage tests with 'make gcov'
-add_custom_target(gcov
+# Create the gcov target. Run coverage tests with 'make gcov_asabru_client'
+add_custom_target(gcov_asabru_client
         COMMAND mkdir -p gcoverage
         COMMAND ${CMAKE_MAKE_PROGRAM} test
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         )
-add_custom_command(TARGET gcov
+add_custom_command(TARGET gcov_asabru_client
         COMMAND echo "=================== GCOV ===================="
         COMMAND gcov -b ${CMAKE_SOURCE_DIR}/test/*.cpp -o ${OBJECT_DIR} | grep -A 5 "Utils_test" > CoverageSummary.tmp
         COMMAND cat CoverageSummary.tmp
@@ -41,12 +41,12 @@ add_custom_command(TARGET gcov
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/gcoverage
         )
 
-add_custom_target(coverage
+add_custom_target(asabru_client_coverage
         COMMAND mkdir -p gcoverage
         COMMAND ${CMAKE_MAKE_PROGRAM} test
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         )
-add_custom_command(TARGET coverage
+add_custom_command(TARGET asabru_client_coverage
         COMMAND echo "=================== GCOV ===================="
         COMMAND gcovr -r ${CMAKE_SOURCE_DIR} --exclude ${CMAKE_SOURCE_DIR}/build/_deps --exclude ${CMAKE_SOURCE_DIR}/test --html-details -o ${CMAKE_BINARY_DIR}/gcoverage/coverage.html
         COMMAND echo "-- Coverage files have been output to ${CMAKE_BINARY_DIR}/gcoverage"
@@ -58,7 +58,7 @@ set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES coverage)
 
 # Create the gcov-clean target. This cleans the build as well as generated
 # .gcda and .gcno files.
-add_custom_target(scrub
+add_custom_target(asabru_client_scrub
         COMMAND ${CMAKE_MAKE_PROGRAM} clean
         COMMAND rm -f ${OBJECT_DIR}/*.gcno
         COMMAND rm -f ${OBJECT_DIR}/*.gcda

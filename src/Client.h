@@ -97,7 +97,7 @@ public:
 
         if (RetVal == 0 || RetVal == -1)
         {
-            printf("Error at socket(): %ld\n", SocketGetLastError());
+            printf("Error at socket(): %d\n", SocketGetLastError());
             return false;
         }
 
