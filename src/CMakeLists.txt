@@ -40,6 +40,11 @@ ENDMACRO()
 
 HEADER_DIRECTORIES("../../asabru-commons/src/*.h" header_dir_list)
 include_directories(${header_dir_list})
+include_directories(/opt/homebrew/cellar/readline/8.2.10/include)
+
+
+# Find the readline package
+#find_package(Readline REQUIRED)
 
 # Create a library target
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
@@ -53,4 +58,5 @@ set_target_properties(${PROJECT_NAME}
 target_link_libraries(
         ${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-commons/build/lib/libasabru_commons.a
+        /opt/homebrew/cellar/readline/8.2.10/lib/libreadline.dylib
 )

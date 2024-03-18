@@ -1,118 +1,185 @@
-/**
- * Client.h : Defines the class for socket connection and communication used in the client side
- */
-#ifndef _CLIENT_DOT_H
-#define _CLIENT_DOT_H
+//
+// Created by JOSEPH ABRAHAM on 16/03/24.
+//
 
-class CClientSocket
+#ifndef CHISTA_ASABRU_CLIENT_H
+#define CHISTA_ASABRU_CLIENT_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+#include <string>
+#include <vector>
+
+using namespace std;
+
+#include <readline/readline.h>
+#include <readline/history.h>
+
+typedef struct {
+  int type; // variant
+  union  {
+    char buffer[255];
+    int  value;
+    float fvalue;
+    double dvalue;
+    void *ptr;
+    char *ptr_str;
+  }DATA;
+}T_PARAM;
+
+typedef struct {
+  int p_count; // parameter count
+  T_PARAM param_one[16]; //---
+}T_PARAM_LIST;
+
+typedef   T_PARAM_LIST*  (*HANDLE_COMMAND)(T_PARAM_LIST * );
+
+typedef struct
 {
-    char m_ServerName[255];
-    int m_PortNumber;
-    struct sockaddr_in m_Server;
-    struct hostent *m_HostPointer;
-    unsigned int m_addr;
-    SOCKET m_ConnectSock;
+  char command_name[100];
+  HANDLE_COMMAND handler;
+}T_ACTION;
 
-public:
-    /**
-     * Constructor
-     * 
-     * @param ServerName The address of the remote server
-     * @param PortNumber The port to which the socket should bind
-     */
-    CClientSocket(char *ServerName, int PortNumber)
-    {
-        strcpy(m_ServerName, ServerName);
-        m_PortNumber = PortNumber;
-    }
+//////////////////////////////////////////
+// A Subroutine to split a string to a list of string
+//
+vector<string> split (string s, string delimiter);
 
-    SOCKET GetSocket() { return m_ConnectSock; }
+T_PARAM_LIST  SetupParams(vector<string>& strvector );
 
-    /**
-     * Resolves the sockaddr_in object
-     */
-    bool Resolve()
-    {
-        if (isalpha(m_ServerName[0])) {
-            m_HostPointer = gethostbyname(m_ServerName);
-        } else {
-            /* Convert nnn.nnn address to a usable one */
-            m_addr = inet_addr(m_ServerName);
-            m_HostPointer = gethostbyaddr((char *)&m_addr, 4, AF_INET);
-        }
-        
-        if (m_HostPointer == NULL)
-        {
-            return false;
-        }
+void dump_params(T_PARAM_LIST *lst );
 
-        memset(&m_Server, 0, sizeof(m_Server));
+//
+// T_ACTION *handle_command_xxx(T_PARAM_LIST * param_list );
+//
+T_PARAM_LIST * handle_command_show( T_PARAM_LIST *param_list ) {
+  fprintf(stdout,"%s\n","SHOW .....");
+  dump_params(param_list);
+  return 0;
+}
 
-        memcpy(&(m_Server.sin_addr), m_HostPointer->h_addr, m_HostPointer->h_length);
-        m_Server.sin_family = m_HostPointer->h_addrtype;
-        m_Server.sin_port = htons(m_PortNumber);
-        return true;
-    }
+T_PARAM_LIST *handle_command_list( T_PARAM_LIST *param_list ) {
+  fprintf(stdout,"%s\n","LIST ...");
+  dump_params(param_list);
+  return 0;
+}
+T_PARAM_LIST *handle_command_pwd( T_PARAM_LIST *param_list ) {
+  fprintf(stdout,"%s\n","PWD ...");
+  dump_params(param_list);
+  return 0;
+}
 
-    /**
-     * Creates a socket and connects to the remote server
-     */
-    bool Connect()
-    {
-        m_ConnectSock = socket(AF_INET, SOCK_STREAM, 0);
-        if (m_ConnectSock < 0)
-        {
-            return false;
-        }
+T_PARAM_LIST *handle_command_ls( T_PARAM_LIST *param_list ) {
+  fprintf(stdout,"%s\n","LS ..");
+  dump_params(param_list);
+  return 0;
+}
 
-        if (connect(m_ConnectSock,
-                    (struct sockaddr *)&m_Server,
-                    sizeof(m_Server)) == SOCKET_ERROR)
-        {
-            return false;
-        }
-        return true;
-    }
+T_PARAM_LIST *handle_command_upload( T_PARAM_LIST *param_list ) {
+  fprintf(stdout,"%s\n","Upload file ..");
+  dump_params(param_list);
+  return 0;
+  //return UploadFile(param_list[0],param_list[1],param_list[2]);
+}
 
-    /**
-     * Sends the data from the buffer to the socket
-     */
-    bool Send(void *buffer, int len)
-    {
-        int RetVal = send(m_ConnectSock, (const char *)buffer, len, 0);
-        if (RetVal == SOCKET_ERROR)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-    * Receives the data from the socket and moves it to the buffer input
-    */
-    bool Receive(void *buffer, int *len)
-    {
-        int RetVal = recv(m_ConnectSock, (char *)buffer, *len, 0);
-
-        if (RetVal == 0 || RetVal == -1)
-        {
-            printf("Error at socket(): %d\n", SocketGetLastError());
-            return false;
-        }
-
-        *len = RetVal;
-        return true;
-    }
-
-    /**
-     * Closes the socket connection
-     */
-    int Close()
-    {
-        CloseSocket(m_ConnectSock);
-        return 0;
-    }
+T_ACTION actions[] = {
+    {"show",handle_command_show },
+    {"list",handle_command_list },
+    {"pwd",handle_command_pwd },
+    {"ls",handle_command_ls },
+    {"upload",handle_command_upload }
 };
 
-#endif
+bool command_dispatch(char *buff ) {
+  string ns(buff);
+  vector<string> vs = split(ns,string(" "));
+  T_PARAM_LIST res = SetupParams(vs);
+  if ( strcmp(vs[0].c_str(),"show") == 0 ) {
+    actions[0].handler(&res);
+    return true;
+  }
+  else if ( strcmp(vs[0].c_str(),"list") == 0 ) {
+    actions[1].handler(&res);
+    return true;
+  }
+  else if ( strcmp(vs[0].c_str(),"pwd") == 0 ) {
+    actions[2].handler(&res);
+    return true;
+  }
+  else if ( strcmp(vs[0].c_str(),"ls") == 0 ) {
+    actions[3].handler(&res);
+    return true;
+  }
+  else if ( strcmp(vs[0].c_str(),"upload") == 0 ) {
+    actions[4].handler(&res);
+    return true;
+  }
+  else if ( strcmp(vs[0].c_str(),"exit") == 0 ) {
+    exit(0);
+    return false;
+  }
+  printf("[%s]\n", buff);
+  return true;
+}
+
+//int main(int argc, char** argv) {
+//  printf("Welcome! You can exit by pressing Ctrl+C at any time...\n");
+//  if (argc > 1 && std::string(argv[1]) == "-d") {
+//    // By default readline does filename completion. With -d, we disable this
+//    // by asking readline to just insert the TAB character itself.
+//    rl_bind_key('\t', rl_insert);
+//  }
+//  char* buf;
+//  while ((buf = readline(">> ")) != nullptr) {
+//    if (strlen(buf) > 0) {
+//      add_history(buf);
+//    }
+//    command_dispatch(buf);
+//    // readline malloc's a new buffer every time.
+//    free(buf);
+//  }
+//  return 0;
+//}
+
+vector<string> split (string s, string delimiter) {
+  size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+  string token;
+  vector<string> res;
+  //--- Leveraging std::string::find, we split the string
+  while ((pos_end = s.find (delimiter, pos_start)) != string::npos) {
+    token = s.substr (pos_start, pos_end - pos_start);
+    pos_start = pos_end + delim_len;
+    res.push_back (token);
+  }
+  //---- Retrieve the remaining string and push to return vector
+  res.push_back (s.substr (pos_start));
+  return res;
+}
+
+////////////////////////////////////////
+//
+//
+T_PARAM_LIST  SetupParams(vector<string>& strvector ) {
+  int ns = strvector.size();
+  T_PARAM_LIST ls;
+  ls.p_count = ns;
+  int i=0;
+  for( string str : strvector ) {
+    ls.param_one[i].type = 1; //string
+    strcpy(ls.param_one[i].DATA.buffer,str.c_str());
+    i++;
+  }
+  return ls;
+}
+
+void dump_params(T_PARAM_LIST *lst ) {
+  int ns = lst->p_count;
+  for(int i=1; i<ns; ++i ) {
+    cout << ".." << lst->param_one[i].DATA.buffer << "..";
+  }
+  cout << endl;
+  return;
+}
+
+#endif // CHISTA_ASABRU_CLIENT_H
