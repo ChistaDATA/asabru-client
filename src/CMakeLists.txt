@@ -39,13 +39,14 @@ MACRO(HEADER_DIRECTORIES search_path return_list)
 ENDMACRO()
 
 HEADER_DIRECTORIES("../../asabru-commons/src/*.h" header_dir_list)
-include_directories(${header_dir_list})
-include_directories(/opt/homebrew/cellar/readline/8.2.10/include)
+include_directories(${header_dir_list} ${Readline_INCLUDE_DIRS})
+#include_directories(/opt/homebrew/cellar/readline/8.2.10/include)
 
+#dependencies
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/modules" )
 
-# Find the readline package
-#find_package(Readline REQUIRED)
-
+## Find the readline package
+find_package(Readline REQUIRED)
 # Create a library target
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
