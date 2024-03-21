@@ -40,7 +40,7 @@ ENDMACRO()
 
 HEADER_DIRECTORIES("../../asabru-commons/src/*.h" header_dir_list)
 include_directories(${header_dir_list} ${Readline_INCLUDE_DIRS})
-#include_directories(/opt/homebrew/cellar/readline/8.2.10/include)
+include_directories(../../asabru-parsers/src)
 
 #dependencies
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/modules" )
@@ -59,5 +59,6 @@ set_target_properties(${PROJECT_NAME}
 target_link_libraries(
         ${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-commons/build/lib/libasabru_commons.a
-        /opt/homebrew/cellar/readline/8.2.10/lib/libreadline.dylib
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-parsers/build/lib/libasabru_parsers.a
+        Readline
 )
