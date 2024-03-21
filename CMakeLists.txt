@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(AsabruClient VERSION 1.0)
+# Enables generation of compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(ExternalProject)
 
