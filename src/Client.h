@@ -16,6 +16,8 @@ using namespace std;
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include "CommandDispatcher.h"
+
 typedef struct {
   int type; // variant
   union  {
@@ -54,8 +56,8 @@ void dump_params(T_PARAM_LIST *lst );
 // T_ACTION *handle_command_xxx(T_PARAM_LIST * param_list );
 //
 T_PARAM_LIST * handle_command_show( T_PARAM_LIST *param_list ) {
-  fprintf(stdout,"%s\n","SHOW .....");
-  dump_params(param_list);
+    fprintf(stdout,"%s\n","SHOW .....");
+    dump_params(param_list);
   return 0;
 }
 
@@ -181,5 +183,7 @@ void dump_params(T_PARAM_LIST *lst ) {
   cout << endl;
   return;
 }
+
+bool AuthenticateUser(const std::string username,const std::string password,int port );
 
 #endif // CHISTA_ASABRU_CLIENT_H
