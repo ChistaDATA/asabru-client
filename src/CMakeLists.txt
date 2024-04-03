@@ -22,7 +22,7 @@ add_compile_definitions(DEBUG)
 file(GLOB_RECURSE SOURCE_FILES "./*.cpp")
 
 # Add build directory
-set(BUILD_DIRECTORY "build")
+set(BUILD_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build")
 
 # Set library directory
 set(LIB_DIRECTORY "lib")
