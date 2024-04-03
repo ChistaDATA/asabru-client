@@ -39,8 +39,11 @@ MACRO(HEADER_DIRECTORIES search_path return_list)
 ENDMACRO()
 
 HEADER_DIRECTORIES("../../asabru-commons/src/*.h" header_dir_list)
-include_directories(${header_dir_list} ${Readline_INCLUDE_DIRS})
+include_directories(${header_dir_list})
+HEADER_DIRECTORIES("../../asabru-engine/src/*.h" header_dir_list)
+include_directories(${header_dir_list})
 include_directories(../../asabru-parsers/src)
+include_directories(../../nlohmann_json/single_include)
 # Find SqlLite3
 find_package (SQLite3 REQUIRED)
 include_directories(${SQLite3_INCLUDE_DIRS})
@@ -50,6 +53,7 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/modules
 
 ## Find the readline package
 find_package(Readline REQUIRED)
+include_directories(${Readline_INCLUDE_DIRS})
 # Create a library target
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
@@ -64,5 +68,6 @@ target_link_libraries(
         PUBLIC ${SQLite3_LIBRARIES}
         ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-commons/build/lib/libasabru_commons.a
         ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-parsers/build/lib/libasabru_parsers.a
-        Readline
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-engine/build/lib/libasabru_engine.a
+        readline
 )

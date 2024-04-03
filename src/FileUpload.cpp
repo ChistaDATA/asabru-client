@@ -14,8 +14,9 @@
 
 
 #include "FileUpload.h"
+#include "CClientSocket.h"
 
-    int UploadFile(char * file_name, char * server_name, int port )
+int UploadFile(const char * file_name, const char * server_name, int port )
 {
 
     if (!StartSocket()) {
@@ -29,22 +30,12 @@
     // Initialize client socket class
     CClientSocket c_sock(server_name, port);
 
-    // Resolve server and connect
-    if (!c_sock.Resolve() ) {
-        printf("Failed to Resolve Client Socket ............\n");
-        return 1;
-    }
-        
-    if (!c_sock.Connect())  {
-        printf("Failed to Connect to the Server ............\n");
-        return 1;
-    }
-
     /* Socket connection has been created. Initiate protocol communation */
 
     /* Create Handshake packet and Send to socket */
     T_HAND_SHAKE send_packet = MakeHandShake();
-    c_sock.Send(&send_packet, sizeof(send_packet));
+
+    c_sock.SendBytes( &send_packet, sizeof(send_packet));
 
     /*  Wait for Acknowledgment packet ( sleep 5s )*/
     #ifdef WINDOWS_OS
@@ -58,42 +49,42 @@
     int num_read = 32;
 
     if ( !c_sock.Receive(buffer, &num_read) ) {
-        cout << "Could not Receive Packet " << endl;
+        std::cout << "Could not Receive Packet " << std::endl;
         return 1;
     }
-    
+
     /* Copy the char buffer received from socket into a T_ACK struct */
     T_ACK ack;
     memcpy(&ack, buffer, sizeof(T_ACK));
 
     // Verify if it is acknowledgment packet
     if ( ack.packet_type != 2 ) {
-        cout << "Acknowledged Packet is not correct...........\n" << endl;
+        std::cout << "Acknowledged Packet is not correct...........\n" << std::endl;
         return 1;
     }
 
     // Received acknowledment and ready to transfer file
-    cout <<endl << "Ready to Transfer File ...................\n" << endl;
+    std::cout <<std::endl << "Ready to Transfer File ...................\n" << std::endl;
 
-    // Create file meta data struct and send to socket 
+    // Create file metadata struct and send to socket
     T_FILE_META file_meta_data = MakeFileMeta(file_name, size_file);
-    c_sock.Send(&file_meta_data,sizeof(file_meta_data));
+    c_sock.SendBytes((char*) &file_meta_data,sizeof(file_meta_data));
 
     // Receive acknowledgment from server
-    if ( !c_sock.Receive(buffer, &num_read) ) {
-        cout << "Could not Receive Packet " << endl;
+    if ( !c_sock.RecvBlocking(buffer, num_read) ) {
+        std::cout << "Could not Receive Packet " << std::endl;
         return 1;
     }
         
     memcpy(&ack, buffer, sizeof(T_ACK));
     if ( ack.packet_type != 2 ) {
-        cout << "Acknowledged Packet is not correct......" << endl;
+        std::cout << "Acknowledged Packet is not correct......" << std::endl;
         return 1;
     }
     
 
     /* Send file in chunks of size */
-    cout << "Now, we will iterate to send the content of the file......" << endl;
+    std::cout << "Now, we will iterate to send the content of the file......" << std::endl;
 
     // This stores the number of bytes read from the file
     int num = 0;
@@ -106,12 +97,12 @@
     FILE * fp = fopen(file_name, "rb");
 
     if  (fp == nullptr) {
-        cout << "Failed to Open File = " << file_name << endl;
+        std::cout << "Failed to Open File = " << file_name << std::endl;
         return 1;
     }
 
     
-    cout << "Opened File.............." << file_name << endl;
+    std::cout << "Opened File.............." << file_name << std::endl;
     char  read_buffer[4096];
 
     /**
@@ -120,23 +111,20 @@
     */
     while ( (num = fread(read_buffer, 1, 4096, fp)) == 4096 ) {
 
-        cout << "Sequence      ............... " << packet_sequence << endl;
-        cout << "Sending Bytes ............... " << num << endl;
+        std::cout << "Sequence      ............... " << packet_sequence << std::endl;
+        std::cout << "Sending Bytes ............... " << num << std::endl;
 
         // Create file chunk packet
         T_FILE_CHUNK * chunk = MakeBufferPack(read_buffer, 4096, packet_sequence++);
 
         // Send file chunk packet
-        if ( !c_sock.Send(chunk, chunk_size) ) {
-            cout << "Send Failure " << endl;
-            break;
-        }
+        c_sock.SendBytes((char*) chunk, chunk_size);
 
         // free up the chunk memory
         free(chunk);
     }
-    cout << "Residue = " << num << endl; // Remaining bytes that was read when it came out of the above loop
-    cout << "Coming out of the Send Loop " << "Send Residue" << endl;
+    std::cout << "Residue = " << num << std::endl; // Remaining bytes that was read when it came out of the above loop
+    std::cout << "Coming out of the Send Loop " << "Send Residue" << std::endl;
 
     /**
      * If there are any residue bytes remaining, 
@@ -144,20 +132,17 @@
     */
     if ( num > 0 ) {
         T_FILE_CHUNK * chunk = MakeBufferPack( read_buffer, num, packet_sequence++ );
-        if ( !c_sock.Send(chunk, chunk_size) ) {
-            cout << "Send Failure " << endl;
-            return -1;
-        }
+        c_sock.SendBytes((char*)chunk, chunk_size);
     }
     
     // Close file pointer as we are done reading from the file.
     fclose(fp);
-    cout << "Finished Sending File, About to send EOF " << endl;
+    std::cout << "Finished Sending File, About to send EOF " << std::endl;
 
     // Send EOF packet, so the server gets confirmation that all packets have been sent.
     T_FILE_EOF eof = MakeEof();
-    c_sock.Send(&eof,sizeof(eof));
-    cout << "Finished Sending EOF " << endl ;
+    c_sock.SendBytes((char*)&eof,sizeof(eof));
+    std::cout << "Finished Sending EOF " << std::endl ;
 
     // Close socket connection and clean up.
     c_sock.Close(); 
