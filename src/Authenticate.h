@@ -1,6 +1,6 @@
-////
-//// Created by JOSEPH ABRAHAM on 07/04/24.
-////
+//
+// Created by JOSEPH ABRAHAM on 07/04/24.
+//
 //
 #ifndef CHISTA_ASABRU_AUTHENTICATE_H
 #define CHISTA_ASABRU_AUTHENTICATE_H
@@ -12,9 +12,9 @@
 
 using namespace std;
 
- bool AuthenticateUser(const std::string username, const std::string password,
-                             const std::string host, const int port);
- bool RetrieveStringFromContext(ComputationContext &context,
-                                      const std::string &key, std::string &value);
+bool AuthenticateUser(const std::string username, const std::string password,
+                      const std::string host, const int port);
 
-#endif// CHISTA_ASABRU_AUTHENTICATE_H
+#endif
+
+// CHISTA_ASABRU_AUTHENTICATE_H

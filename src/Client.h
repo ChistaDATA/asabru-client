@@ -53,11 +53,6 @@ typedef struct {
   HANDLE_COMMAND handler;
 } T_ACTION;
 
-//////////////////////////////////////////
-// A Subroutine to split a string to a list of string
-//
-vector<string> split(string s, string delimiter);
-
 T_PARAM_LIST SetupParams(vector<string> &strvector);
 
 void dump_params(T_PARAM_LIST *lst);
@@ -99,52 +94,46 @@ T_PARAM_LIST *handle_command_upload(T_PARAM_LIST *param_list) {
       UploadFile(file_name, server_name, port));
 }
 
-T_ACTION actions[] = {{"show", handle_command_show},
-                      {"list", handle_command_list},
-                      {"pwd", handle_command_pwd},
-                      {"ls", handle_command_ls},
-                      {"upload", handle_command_upload}};
+T_PARAM_LIST *handle_command_exit(T_PARAM_LIST *param_list) {
+  fprintf(stdout, "%s\n", "EXIT ..");
+  dump_params(param_list);
+  exit(0);
+  return 0;
+}
+
+// Map of commands.New commands can be added at the end
+std::map<const std::string, HANDLE_COMMAND> actions = {
+    {"show", handle_command_show},     {"list", handle_command_list},
+    {"pwd", handle_command_pwd},       {"ls", handle_command_ls},
+    {"upload", handle_command_upload}, {"exit", handle_command_exit}};
 
 bool command_dispatch(char *buff) {
   string ns(buff);
-  vector<string> commands = split(ns, string(" "));
-  T_PARAM_LIST res = SetupParams(commands);
-  if (strcmp(commands[0].c_str(), "show") == 0) {
-    actions[0].handler(&res);
-    return true;
-  } else if (strcmp(commands[0].c_str(), "list") == 0) {
-    actions[1].handler(&res);
-    return true;
-  } else if (strcmp(commands[0].c_str(), "pwd") == 0) {
-    actions[2].handler(&res);
-    return true;
-  } else if (strcmp(commands[0].c_str(), "ls") == 0) {
-    actions[3].handler(&res);
-    return true;
-  } else if (strcmp(commands[0].c_str(), "upload") == 0) {
-    actions[4].handler(&res);
-    return true;
-  } else if (strcmp(commands[0].c_str(), "exit") == 0) {
-    exit(0);
+  vector<string> commands = Utils::split(ns, " ");
+
+  // Check if the command is empty
+  if (commands.empty()) {
+    // Handle error or return false
     return false;
   }
-  printf("[%s]\n", buff);
-  return true;
-}
 
-vector<string> split(string s, string delimiter) {
-  size_t pos_start = 0, pos_end, delim_len = delimiter.length();
-  string token;
-  vector<string> res;
-  //--- Leveraging std::string::find, we split the string
-  while ((pos_end = s.find(delimiter, pos_start)) != string::npos) {
-    token = s.substr(pos_start, pos_end - pos_start);
-    pos_start = pos_end + delim_len;
-    res.push_back(token);
+  // Check if the command exists in the map
+  auto it = actions.find(commands[0]);
+
+  if (it == actions.end()) {
+    // Handle unknown command or return false
+    return false;
   }
-  //---- Retrieve the remaining string and push to return vector
-  res.push_back(s.substr(pos_start));
-  return res;
+
+  // Set up parameters
+  T_PARAM_LIST res = SetupParams(commands);
+
+  // Invoke the function if the command exists
+  it->second(&res);
+
+  printf("[%s]\n", buff);
+  // Optionally, return true to indicate success
+  return true;
 }
 
 ////////////////////////////////////////
