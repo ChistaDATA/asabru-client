@@ -1,118 +1,164 @@
-/**
- * Client.h : Defines the class for socket connection and communication used in the client side
- */
-#ifndef _CLIENT_DOT_H
-#define _CLIENT_DOT_H
+//
+// Created by JOSEPH ABRAHAM on 16/03/24.
+//
 
-class CClientSocket
-{
-    char m_ServerName[255];
-    int m_PortNumber;
-    struct sockaddr_in m_Server;
-    struct hostent *m_HostPointer;
-    unsigned int m_addr;
-    SOCKET m_ConnectSock;
+#ifndef CHISTA_ASABRU_CLIENT_H
+#define CHISTA_ASABRU_CLIENT_H
 
-public:
-    /**
-     * Constructor
-     * 
-     * @param ServerName The address of the remote server
-     * @param PortNumber The port to which the socket should bind
-     */
-    CClientSocket(char *ServerName, int PortNumber)
-    {
-        strcpy(m_ServerName, ServerName);
-        m_PortNumber = PortNumber;
-    }
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+#include <vector>
 
-    SOCKET GetSocket() { return m_ConnectSock; }
+using namespace std;
 
-    /**
-     * Resolves the sockaddr_in object
-     */
-    bool Resolve()
-    {
-        if (isalpha(m_ServerName[0])) {
-            m_HostPointer = gethostbyname(m_ServerName);
-        } else {
-            /* Convert nnn.nnn address to a usable one */
-            m_addr = inet_addr(m_ServerName);
-            m_HostPointer = gethostbyaddr((char *)&m_addr, 4, AF_INET);
-        }
-        
-        if (m_HostPointer == NULL)
-        {
-            return false;
-        }
+#include <readline/history.h>
+#include <readline/readline.h>
 
-        memset(&m_Server, 0, sizeof(m_Server));
+#include "FileUpload.h"
 
-        memcpy(&(m_Server.sin_addr), m_HostPointer->h_addr, m_HostPointer->h_length);
-        m_Server.sin_family = m_HostPointer->h_addrtype;
-        m_Server.sin_port = htons(m_PortNumber);
-        return true;
-    }
-
-    /**
-     * Creates a socket and connects to the remote server
-     */
-    bool Connect()
-    {
-        m_ConnectSock = socket(AF_INET, SOCK_STREAM, 0);
-        if (m_ConnectSock < 0)
-        {
-            return false;
-        }
-
-        if (connect(m_ConnectSock,
-                    (struct sockaddr *)&m_Server,
-                    sizeof(m_Server)) == SOCKET_ERROR)
-        {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Sends the data from the buffer to the socket
-     */
-    bool Send(void *buffer, int len)
-    {
-        int RetVal = send(m_ConnectSock, (const char *)buffer, len, 0);
-        if (RetVal == SOCKET_ERROR)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-    * Receives the data from the socket and moves it to the buffer input
-    */
-    bool Receive(void *buffer, int *len)
-    {
-        int RetVal = recv(m_ConnectSock, (char *)buffer, *len, 0);
-
-        if (RetVal == 0 || RetVal == -1)
-        {
-            printf("Error at socket(): %d\n", SocketGetLastError());
-            return false;
-        }
-
-        *len = RetVal;
-        return true;
-    }
-
-    /**
-     * Closes the socket connection
-     */
-    int Close()
-    {
-        CloseSocket(m_ConnectSock);
-        return 0;
-    }
+enum T_PARAM_TYPE {
+  ILLEGAL_PARAM = -1,
+  T_CHAR,
+  T_INT,
+  T_FLOAT,
+  T_DOUBLE,
+  T_BUFFER,
+  T_VOID_PTR,
+  T_CHAR_PTR
 };
 
-#endif
+typedef struct {
+  int type; // variant
+  union {
+    char buffer[255];
+    int value;
+    float fvalue;
+    double dvalue;
+    void *ptr;
+    char *ptr_str;
+  } DATA;
+} T_PARAM;
+
+typedef struct {
+  int p_count;        // parameter count
+  T_PARAM params[16]; //---
+} T_PARAM_LIST;
+
+typedef T_PARAM_LIST *(*HANDLE_COMMAND)(T_PARAM_LIST *);
+
+typedef struct {
+  char command_name[100];
+  HANDLE_COMMAND handler;
+} T_ACTION;
+
+T_PARAM_LIST SetupParams(vector<string> &strvector);
+
+void dump_params(T_PARAM_LIST *lst);
+
+//
+// T_ACTION *handle_command_xxx(T_PARAM_LIST * param_list );
+//
+T_PARAM_LIST *handle_command_show(T_PARAM_LIST *param_list) {
+  fprintf(stdout, "%s\n", "SHOW .....");
+  dump_params(param_list);
+  return 0;
+}
+
+T_PARAM_LIST *handle_command_list(T_PARAM_LIST *param_list) {
+  fprintf(stdout, "%s\n", "LIST ...");
+  dump_params(param_list);
+  return 0;
+}
+
+T_PARAM_LIST *handle_command_pwd(T_PARAM_LIST *param_list) {
+  fprintf(stdout, "%s\n", "PWD ...");
+  dump_params(param_list);
+  return 0;
+}
+
+T_PARAM_LIST *handle_command_ls(T_PARAM_LIST *param_list) {
+  fprintf(stdout, "%s\n", "LS ..");
+  dump_params(param_list);
+  return 0;
+}
+
+T_PARAM_LIST *handle_command_upload(T_PARAM_LIST *param_list) {
+  fprintf(stdout, "%s\n", "Upload file ..");
+  dump_params(param_list);
+  const char *file_name = param_list->params[1].DATA.buffer;
+  const char *server_name = param_list->params[2].DATA.buffer;
+  int port = atoi(param_list->params[3].DATA.buffer);
+  return reinterpret_cast<T_PARAM_LIST *>(
+      UploadFile(file_name, server_name, port));
+}
+
+T_PARAM_LIST *handle_command_exit(T_PARAM_LIST *param_list) {
+  fprintf(stdout, "%s\n", "EXIT ..");
+  dump_params(param_list);
+  exit(0);
+  return 0;
+}
+
+// Map of commands.New commands can be added at the end
+std::map<const std::string, HANDLE_COMMAND> actions = {
+    {"show", handle_command_show},     {"list", handle_command_list},
+    {"pwd", handle_command_pwd},       {"ls", handle_command_ls},
+    {"upload", handle_command_upload}, {"exit", handle_command_exit}};
+
+bool command_dispatch(char *buff) {
+  string ns(buff);
+  vector<string> commands = Utils::split(ns, " ");
+
+  // Check if the command is empty
+  if (commands.empty()) {
+    // Handle error or return false
+    return false;
+  }
+
+  // Check if the command exists in the map
+  auto it = actions.find(commands[0]);
+
+  if (it == actions.end()) {
+    // Handle unknown command or return false
+    return false;
+  }
+
+  // Set up parameters
+  T_PARAM_LIST res = SetupParams(commands);
+
+  // Invoke the function if the command exists
+  it->second(&res);
+
+  printf("[%s]\n", buff);
+  // Optionally, return true to indicate success
+  return true;
+}
+
+////////////////////////////////////////
+//
+//
+T_PARAM_LIST SetupParams(vector<string> &strvector) {
+  int ns = strvector.size();
+  T_PARAM_LIST ls;
+  ls.p_count = ns;
+  int i = 0;
+  for (string str : strvector) {
+    ls.params[i].type = 1; // string
+    strcpy(ls.params[i].DATA.buffer, str.c_str());
+    i++;
+  }
+  return ls;
+}
+
+void dump_params(T_PARAM_LIST *lst) {
+  int ns = lst->p_count;
+  for (int i = 1; i < ns; ++i) {
+    cout << ".." << lst->params[i].DATA.buffer << "..";
+  }
+  cout << endl;
+  return;
+}
+
+#endif // CHISTA_ASABRU_CLIENT_H

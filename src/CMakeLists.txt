@@ -22,7 +22,7 @@ add_compile_definitions(DEBUG)
 file(GLOB_RECURSE SOURCE_FILES "./*.cpp")
 
 # Add build directory
-set(BUILD_DIRECTORY "build")
+set(BUILD_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build")
 
 # Set library directory
 set(LIB_DIRECTORY "lib")
@@ -40,7 +40,20 @@ ENDMACRO()
 
 HEADER_DIRECTORIES("../../asabru-commons/src/*.h" header_dir_list)
 include_directories(${header_dir_list})
+HEADER_DIRECTORIES("../../asabru-engine/src/*.h" header_dir_list)
+include_directories(${header_dir_list})
+include_directories(../../asabru-parsers/src)
+include_directories(../../nlohmann_json/single_include)
+# Find SqlLite3
+find_package (SQLite3 REQUIRED)
+include_directories(${SQLite3_INCLUDE_DIRS})
 
+#dependencies
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/modules" )
+
+## Find the readline package
+find_package(Readline REQUIRED)
+include_directories(${Readline_INCLUDE_DIRS})
 # Create a library target
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
@@ -52,5 +65,9 @@ set_target_properties(${PROJECT_NAME}
 
 target_link_libraries(
         ${PROJECT_NAME}
+        PUBLIC ${SQLite3_LIBRARIES}
         ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-commons/build/lib/libasabru_commons.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-parsers/build/lib/libasabru_parsers.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-engine/build/lib/libasabru_engine.a
+        readline
 )
