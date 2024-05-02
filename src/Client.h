@@ -17,6 +17,7 @@ using namespace std;
 #include <readline/readline.h>
 
 #include "FileUpload.h"
+#include "UploadZipFile.h"
 
 enum T_PARAM_TYPE {
   ILLEGAL_PARAM = -1,
@@ -94,6 +95,16 @@ T_PARAM_LIST *handle_command_upload(T_PARAM_LIST *param_list) {
       UploadFile(file_name, server_name, port));
 }
 
+T_PARAM_LIST *handle_command_upload_metrics_plugin(T_PARAM_LIST *param_list) {
+	fprintf(stdout, "%s\n", "Upload metrics plugin file ..");
+	dump_params(param_list);
+	//const char *file_name = param_list->params[1].DATA.buffer;
+	//const char *server_name = param_list->params[2].DATA.buffer;
+	//int port = atoi(param_list->params[3].DATA.buffer);
+	return reinterpret_cast<T_PARAM_LIST *>(
+		UploadZipFile());
+}
+
 T_PARAM_LIST *handle_command_exit(T_PARAM_LIST *param_list) {
   fprintf(stdout, "%s\n", "EXIT ..");
   dump_params(param_list);
@@ -105,7 +116,8 @@ T_PARAM_LIST *handle_command_exit(T_PARAM_LIST *param_list) {
 std::map<const std::string, HANDLE_COMMAND> actions = {
     {"show", handle_command_show},     {"list", handle_command_list},
     {"pwd", handle_command_pwd},       {"ls", handle_command_ls},
-    {"upload", handle_command_upload}, {"exit", handle_command_exit}};
+    {"upload", handle_command_upload}, {"upload-metrics-plugin", handle_command_upload_metrics_plugin},
+	{"exit", handle_command_exit}};
 
 bool command_dispatch(char *buff) {
   string ns(buff);

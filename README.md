@@ -19,3 +19,8 @@ cd build
 cmake ..
 make
 ```
+
+To use local directory files , use the command
+```
+cmake -DASABRU_COMMONS_BUILD=LOCAL_DIR -DASABRU_ENGINE_BUILD=LOCAL_DIR -DASABRU_PARSERS_BUILD=LOCAL_DIR ..
+```

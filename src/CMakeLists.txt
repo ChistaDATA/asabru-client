@@ -15,6 +15,9 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     add_compile_options(-Wall)
 endif ()
 
+# add dependencies
+include(../cmake/CPM.cmake)
+
 # Set DEBUG preprocessor flag
 add_compile_definitions(DEBUG)
 
@@ -63,11 +66,71 @@ set_target_properties(${PROJECT_NAME}
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${LIB_DIRECTORY}
         )
 
+if (ASABRU_COMMONS_BUILD STREQUAL "GIT_TAG")
+    CPMAddPackage(
+            NAME asabru_commons
+            GITHUB_REPOSITORY ChistaDATA/asabru-commons
+            GIT_TAG ${ASABRU_COMMONS_GIT_TAG}
+    )
+elseif (ASABRU_COMMONS_BUILD STREQUAL "LOCAL_DIR")
+    # For development purpose
+    CPMAddPackage(
+            NAME asabru_commons
+            SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-commons/src
+    )
+else()
+    CPMAddPackage(
+            NAME asabru_commons
+            GITHUB_REPOSITORY ChistaDATA/asabru-commons
+            VERSION 0.0.2
+    )
+endif()
+
+if (ASABRU_ENGINE_BUILD STREQUAL "GIT_TAG")
+    CPMAddPackage(
+            NAME asabru_engine
+            GITHUB_REPOSITORY ChistaDATA/asabru-engine
+            GIT_TAG ${ASABRU_ENGINE_GIT_TAG}
+    )
+elseif (ASABRU_ENGINE_BUILD STREQUAL "LOCAL_DIR")
+    # For development purpose
+    CPMAddPackage(
+            NAME asabru_engine
+            SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-engine/src
+    )
+else()
+    CPMAddPackage(
+            NAME asabru_engine
+            GITHUB_REPOSITORY ChistaDATA/asabru-engine
+            VERSION 0.0.2
+    )
+endif()
+
+if (ASABRU_PARSERS_BUILD STREQUAL "GIT_TAG")
+    CPMAddPackage(
+            NAME asabru_parsers
+            GITHUB_REPOSITORY ChistaDATA/asabru-parsers
+            GIT_TAG ${ASABRU_PARSERS_GIT_TAG}
+    )
+elseif (ASABRU_PARSERS_BUILD STREQUAL "LOCAL_DIR")
+    # For development purpose
+    CPMAddPackage(
+            NAME asabru_parsers
+            SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-parsers/src
+    )
+else()
+    CPMAddPackage(
+            NAME asabru_parsers
+            GITHUB_REPOSITORY ChistaDATA/asabru-parsers
+            VERSION 0.0.1
+    )
+endif()
+
 target_link_libraries(
         ${PROJECT_NAME}
         PUBLIC ${SQLite3_LIBRARIES}
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-commons/build/lib/libasabru_commons.a
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-parsers/build/lib/libasabru_parsers.a
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../asabru-engine/build/lib/libasabru_engine.a
+        asabru_commons
+        asabru_parsers
+        asabru_engine
         readline
 )
