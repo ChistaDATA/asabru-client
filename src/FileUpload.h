@@ -6,6 +6,6 @@
 
 #include "file_transfer/Payload.h"
 
-int UploadFile( const char * file_name,  const char * server_name, int port );
+int UploadFile(const char *file_name, const char *server_name, int port);
 
 #endif

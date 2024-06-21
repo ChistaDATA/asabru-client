@@ -12,8 +12,7 @@
 
 using namespace std;
 
-bool AuthenticateUser(const std::string username, const std::string password,
-                      const std::string host, const int port);
+bool AuthenticateUser(const std::string username, const std::string password, const std::string host, const int port);
 
 #endif
 
